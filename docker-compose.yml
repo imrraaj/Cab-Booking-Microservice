@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  # Redis Database
+  discovery-redis:
+    image: redis:latest
+    ports:
+      - "6379:6379" # Expose Redis on port 6379
+
+  # Discovery Service
+  discovery-service:
+    build: ./discovery # Replace with the path to your discovery service code
+    ports:
+      - "8080:8080" # Expose your discovery service on port 8090
+    environment:
+      REDIS_HOST: discovery-redis # Use the service name as the Redis hostname
+      REDIS_PORT: 6379 # Use the service name as the Redis hostname
+    depends_on:
+      - discovery-redis # Ensure that discovery service starts after Redis
