@@ -1,0 +1,6 @@
+version: "3.8"
+services:
+  surreal:
+    image: surrealdb:latest
+    ports:
+      - "8000:8000"

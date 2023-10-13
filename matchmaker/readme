@@ -1,0 +1,4 @@
+Nodejs
+take from queue and check whether the driver exists or  not. If they are in a proximity then allocate them
+
+No db required probably
