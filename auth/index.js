@@ -1,27 +1,25 @@
 import express from "express";
 import mysql from "mysql2";
-import bcrypt from "bcrypt";
+import { hashPassword, matchPassword } from "./bcrypt.js";
 import jwt from 'jsonwebtoken';
-import axios from 'axios';
 
 const app = express();
 const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST || "0.0.0.0",
+  host: "mysql-auth",
   user: "root",
   password: "root",
   database: "authentication",
 });
 
 app.use(express.json());
-
 app.post("/create-user", async (req, res) => {
   const user = req.body.name;
-  const hashedPassword = await bcrypt.hash(req.body.password, 10);
+  const hashedPassword = hashPassword(req.body.password, 10);
 
   try {
     let connection = await pool.promise().getConnection();
     let sqlSearch = 'SELECT * FROM users WHERE username = ?';
-    let [rows, fields] = await connection.execute(sqlSearch, [user]);
+    let [rows] = await connection.execute(sqlSearch, [user]);
     connection.release();
 
     if (rows.length > 0) {
@@ -31,7 +29,7 @@ app.post("/create-user", async (req, res) => {
 
     connection = await pool.promise().getConnection()
     const insertUserQuery = 'INSERT INTO users (username, password) VALUES (?, ?)';
-    [rows, fields] = await connection.execute(insertUserQuery, [user, hashedPassword]);
+    [rows] = await connection.execute(insertUserQuery, [user, hashedPassword]);
     connection.release();
 
     res.json({ status: true, message: 'User register successfully' });
@@ -59,12 +57,11 @@ async function authenticateUser(req, res) {
 
     const hashedPassword = rows[0].password;
 
-    const isPasswordValid = await bcrypt.compare(password, hashedPassword);
+    const isPasswordValid = matchPassword(password, hashedPassword);
     if (isPasswordValid) {
       console.log('---------> Login Successful');
 
 
-      // use jwt to sign a new token
       const token = await jwt.sign({
         name: user,
         exp: Math.floor(Date.now() / 1000) + (60 * 60),
@@ -91,19 +88,33 @@ app.get('/status', (req, res) => {
 
 
 const port = 4400;
-app.listen(port, async () => {
 
-  pool.getConnection((err, connection) => {
-    if (err) {
-      console.log(err);
-      process.exit(1);
-    }
-    console.log("Connected!");
+async function createTableIfNotExists() {
+  try {
+    const connection = await pool.promise().getConnection();
     const sql = "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), password VARCHAR(255))";
-    connection.query(sql, (err, result) => {
-      if (err) throw err;
-      console.log("Table created");
-    });
+    await connection.execute(sql);
+    console.log('Table created');
+    return connection;
+  } catch (error) {
+    console.error('Error creating table:', error);
+    return null;
+  }
+}
+
+
+async function startServer() {
+  let connection = null;
+  while (!connection) {
+    connection = await createTableIfNotExists();
+    if (!connection) {
+      console.log('Retrying in 5 seconds...');
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+
+  app.listen(port, () => {
+    console.log(`Server started on http://localhost:${port}`);
   });
-  console.log(`Server Started on port ${port}...`)
-});
+}
+startServer();

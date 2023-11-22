@@ -64,7 +64,9 @@ function main() {
     config();
     console.log("Environment variables loaded successfully...");
     console.log("Starting to listening for messages...");
-    receiveMessages();
+    setTimeout(() => {
+        receiveMessages();
+    }, 10000);
 }
 main();
 

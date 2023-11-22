@@ -1,11 +1,12 @@
-import express from 'express';
+import * as express from 'express';
+import type { Request, Response } from "express";
 import axios from 'axios';
 import { MongoClient, Collection } from 'mongodb';
 
 const app = express();
 const port = 4900;
 
-const mongoURI = 'mongodb://127.0.0.1:27018';
+const mongoURI = "mongodb://statussphere-mongodb" || 'mongodb://127.0.0.1:27018';
 const dbName = 'monitoringdb';
 const collectionName = 'service_statuses';
 
@@ -22,7 +23,7 @@ async function connectToMongoDB() {
 }
 async function healthcheck() {
     try {
-        const response = await fetch('http://127.0.0.1:8080/discover/all');
+        const response = await fetch('http://discovery-service:8080/discover/all');
         const services = await response.json();
         const serviceStatuses = [];
 
@@ -55,7 +56,7 @@ app.use(express.json());
 // app.get('/healthcheck', async (_, res) => healthcheck());
 
 // add a status endpoint 
-app.get('/status', async (req, res) => {
+app.get('/status', async (_, res) => {
     res.send("OK");
 });
 
