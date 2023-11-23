@@ -27,7 +27,7 @@ async function receiveMessages() {
     const queueName = process.env.QUEUE_NAME;
 
     try {
-        const connection = await connect(`amqp://${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`);
+        const connection = await connect(`amqp://rabbitMQ:5672`);
         const channel = await connection.createChannel();
         await channel.assertQueue(queueName, { durable: true });
         console.log('Connected to RabbitMQ');
@@ -43,11 +43,12 @@ async function receiveMessages() {
                 const rideRequest = JSON.parse(message.content.toString());
                 console.log(rideRequest["riderId"])
 
-                const { data } = await axios.post("http://localhost:7070/find_closest_drivers", {
+                const { data } = await axios.post("http://drivermaster:7070/find_closest_drivers", {
                     lat: rideRequest.currentLocation.latitude,
                     lng: rideRequest.currentLocation.longitude
                 });
                 console.log(data);
+                // send a request to ride service and ask it to save the details of the driver and cutsomer
                 channel.ack(message)
             } catch (e) {
                 console.log("Error parsing the message: ", e)

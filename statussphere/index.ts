@@ -1,5 +1,4 @@
-import * as express from 'express';
-import type { Request, Response } from "express";
+import express from 'express';
 import axios from 'axios';
 import { MongoClient, Collection } from 'mongodb';
 
@@ -16,7 +15,7 @@ interface ServiceStatus {
     timestamp: Date;
 }
 
-async function connectToMongoDB() {
+async function connectToMongoDB(): Promise<Collection<ServiceStatus>> {
     const client = new MongoClient(mongoURI);
     await client.connect();
     return client.db(dbName).collection<ServiceStatus>(collectionName);
@@ -45,7 +44,7 @@ async function healthcheck() {
                 serviceStatuses.push(statusDoc);
             }
         }
-        const collection: Collection<ServiceStatus> = await connectToMongoDB();
+        const collection = await connectToMongoDB();
         await collection.insertMany(serviceStatuses);
     } catch (error) {
         console.error('Error:', error);
@@ -53,13 +52,17 @@ async function healthcheck() {
 }
 app.use(express.json());
 
-// app.get('/healthcheck', async (_, res) => healthcheck());
 
-// add a status endpoint 
-app.get('/status', async (_, res) => {
+app.get('/status', async (_: express.Request, res: express.Response) => {
     res.send("OK");
 });
 
+app.get("/check", async (req: express.Request, res: express.Response) => {
+    // get all the data from the mongodb
+    const collection = await connectToMongoDB();
+    const data = await collection.find({}).toArray();
+    res.json({ data })
+})
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -73,7 +76,7 @@ function main() {
     setInterval(() => {
         console.log('Running status check');
         healthcheck();
-    }, 10 * 1000);
+    }, 60 * 1000);
 
 }
 

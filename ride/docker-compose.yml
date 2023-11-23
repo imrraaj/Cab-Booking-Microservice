@@ -1,8 +1,0 @@
-version: '3'
-services:
-  surrealdb:
-    image: surrealdb/surrealdb:latest
-    container_name: surrealdb
-    restart: always
-    ports:
-      - 8000:8000
