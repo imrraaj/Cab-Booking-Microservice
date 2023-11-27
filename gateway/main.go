@@ -46,18 +46,31 @@ func DiscoveryHandler(w http.ResponseWriter, r *http.Request) {
 	if len(queryParams) > 0 {
 		serviceAddress += "?" + queryParams.Encode()
 	}
-	r.Header = map[string][]string{
-		"Content-Type": {"application/json"},
-	}
+
 	log.Print("forwarding to " + serviceAddress)
+
+	client := &http.Client{}
+
 	if r.Method == http.MethodGet {
-		resp, err := http.Get(serviceAddress)
+		req, err := http.NewRequest("GET", serviceAddress, nil)
 		if err != nil {
 			log.Print("error: ", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error forwarding request"))
 			return
 		}
+
+		for key, value := range r.Header {
+			req.Header.Set(key, value[0])
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Print("error: ", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Error forwarding request"))
+			return
+		}
+
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
@@ -71,7 +84,18 @@ func DiscoveryHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(body)
 		return
 	} else if r.Method == http.MethodPost {
-		resp, err := http.Post(serviceAddress, "application/json", r.Body)
+		req, err := http.NewRequest("POST", serviceAddress, r.Body)
+		if err != nil {
+			log.Print("error: ", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Error forwarding request"))
+			return
+		}
+		fmt.Println("Headers", r.Header)
+		for key, value := range r.Header {
+			req.Header.Set(key, value[0])
+		}
+		resp, err := client.Do(req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error forwarding request"))
