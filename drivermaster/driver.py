@@ -392,16 +392,5 @@ if __name__ == "__main__":
         );
     """)
 
-    # send a req to discovery service
-    # wait for response
-    # if response is ok
-    #   start the server
-    # else
-    #   exit
-    requests.post("http://discovery:8080/assign", json={
-        "server_address": "localhost:7070",
-        "service_path_url": "auth",
-    })
-
     app.run(host='0.0.0.0', port=7070, debug=True)
  

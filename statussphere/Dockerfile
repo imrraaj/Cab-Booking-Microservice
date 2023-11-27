@@ -2,14 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-
-# RUN npm install
-
 COPY . .
 
-EXPOSE 4900
-# compile ts files and then run index.js
+RUN npm install
+
 RUN npx tsc
+
+EXPOSE 4900
+
 CMD [ "node", "index.js" ]
 
