@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -o .\artifects\
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: transitedge-surreal
+  name: transitedge-surreal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: transitedge-surreal
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -o .\artifects\
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: transitedge-surreal
+    spec:
+      containers:
+        - args:
+            - start
+            - --log
+            - trace
+            - --user
+            - root
+            - --pass
+            - root
+          image: surrealdb/surrealdb:latest
+          name: transitedge-surreal
+          ports:
+            - containerPort: 8000
+          resources: {}
+          volumeMounts:
+            - mountPath: /data
+              name: surreal-data
+      restartPolicy: Always
+      volumes:
+        - name: surreal-data
+          persistentVolumeClaim:
+            claimName: surreal-data
+status: {}

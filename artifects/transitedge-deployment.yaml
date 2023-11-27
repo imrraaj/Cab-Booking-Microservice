@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -o .\artifects\
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: transitedge
+  name: transitedge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: transitedge
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -o .\artifects\
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: transitedge
+    spec:
+      containers:
+        - env:
+            - name: SURREALDB_HOST
+              value: transitedge-surreal
+          image: transitedge
+          name: transitedge
+          ports:
+            - containerPort: 9090
+          resources: {}
+      restartPolicy: Always
+status: {}

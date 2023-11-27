@@ -1,5 +1,7 @@
 version: "3.8"
 services:
+
+
   discovery-redis:
     image: redis:latest
     ports:
@@ -8,9 +10,10 @@ services:
       - redis-data:/data
 
 
-  discovery-service:
+  discovery:
     build: ./discovery
-    container_name: discovery-service
+    container_name: discovery
+    image: discovery
     ports:
       - "8080:8080"
     environment:
@@ -33,6 +36,8 @@ services:
 
   statussphere:
     build: ./statussphere
+    container_name: statussphere
+    image: statussphere
     ports:
       - "4900:4900"
     environment:
@@ -42,27 +47,29 @@ services:
       - statussphere-mongodb
 
 
-  rabbitMQ:
+  rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     volumes:
-    - rabbitMQ-data:/var/lib/rabbitmq
-    - rabbitMQ-config:/etc/rabbitmq
+    - rabbitmq-data:/var/lib/rabbitmq
+    - rabbitmq-config:/etc/rabbitmq
 
 
   matchmaker:
     build: ./matchmaker
+    container_name: matchmaker
+    image: matchmaker
     ports:
       - "6060:6060"
     environment:
-      RABBITMQ_HOST: rabbitMQ
+      RABBITMQ_HOST: rabbitmq
       DRIVEMASTER_SERVICE: drivermaster
       TRANSITEDGE_SERVICE: transitedge
     depends_on:
-      - rabbitMQ
+      - rabbitmq
 
 
   drivermaster-postgres:
@@ -81,6 +88,7 @@ services:
   drivermaster:
     build: ./drivermaster
     container_name: drivermaster
+    image: drivermaster
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -95,12 +103,13 @@ services:
 
   tripguard:
     build: ./tripguard
-    container_name: tripguard-service
+    container_name: tripguard
+    image: tripguard
     ports:
       - "4400:4400"
     environment:
       MYSQL_HOST: mysql-tripguard
-      RABBITMQ_HOST: rabbitMQ
+      RABBITMQ_HOST: rabbitmq
     depends_on:
       - mysql-tripguard
 
@@ -121,6 +130,7 @@ services:
   transitedge:
     build: ./transitedge
     container_name: transitedge
+    image: transitedge
     ports:
       - "9090:9090"
     environment:
@@ -142,8 +152,8 @@ services:
 volumes:
   mongodb-data:
   postgres-data:
-  rabbitMQ-data:
-  rabbitMQ-config:
+  rabbitmq-data:
+  rabbitmq-config:
   mysql-data:
   redis-data:
     driver: local
