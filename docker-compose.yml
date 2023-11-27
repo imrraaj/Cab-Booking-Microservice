@@ -1,133 +1,144 @@
 version: "3.8"
 services:
-
-  # discovery-redis:
-  #   image: redis:latest
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis-data:/data
-
-  # discovery-service:
-  #   build: ./discovery
-  #   container_name: discovery-service
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     REDIS_HOST: discovery-redis
-  #     REDIS_PORT: 6379
-  #   depends_on:
-  #     - discovery-redis
+  discovery-redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
 
 
-  # statussphere-mongodb:
-  #     image: mongo
-  #     ports:
-  #       - "27017:27017"
-  #     volumes:
-  #       - mongodb-data:/data/db
-  #     environment:
-  #       MONGO_ROOT_USERNAME: myrootuser
-  #       MONGO_ROOT_PASSWORD: myrootpassword
-
-  # statussphere:
-  #   build: ./statussphere
-  #   ports:
-  #     - "4900:4900"
-  #   environment:
-  #     MONGODB_HOST: statussphere-mongodb
-  #     DISCOVERY: discovery-service
-  #   depends_on:
-  #     - statussphere-mongodb
+  discovery-service:
+    build: ./discovery
+    container_name: discovery-service
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_HOST: discovery-redis
+      REDIS_PORT: 6379
+    depends_on:
+      - discovery-redis
 
 
-
-  # rabbitMQ:
-  #   image: rabbitmq:3-management
-  #   container_name: rabbitmq
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  # volumes:
-  # - rabbitMQ-data:/var/lib/rabbitmq
-  # - rabbitMQ-config:/etc/rabbitmq
-
-
-  # Matchmaker Service
-  # matchmaker:
-  #   build: ./matchmaker
-  #   ports:
-  #     - "6060:6060"
-  #   environment:
-  #     RABBITMQ_HOST: rabbitMQ
-  #     RABBITMQ_PORT: 5672
-  #   depends_on:
-  #     - rabbitMQ
+  statussphere-mongodb:
+      image: mongo
+      ports:
+        - "27017:27017"
+      volumes:
+        - mongodb-data:/data/db
+      environment:
+        MONGO_ROOT_USERNAME: myrootuser
+        MONGO_ROOT_PASSWORD: myrootpassword
 
 
+  statussphere:
+    build: ./statussphere
+    ports:
+      - "4900:4900"
+    environment:
+      MONGODB_HOST: statussphere-mongodb
+      DISCOVERY_SERVICE: discovery-service
+    depends_on:
+      - statussphere-mongodb
 
-  # drivermaster-postgres:
-  #   image: postgres
-  #   container_name: drivermaster-postgres
-  #   environment:
-  #     POSTGRES_DB: driverdb
-  #     POSTGRES_USER: driverService
-  #     POSTGRES_PASSWORD: driver
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres-data:/var/lib/postgresql/data
 
-  # drivermaster:
-  #   build: ./drivermaster
-  #   container_name: drivermaster
-  #   environment:
-  #     POSTGRES_HOST: postgres
-  #     POSTGRES_PORT: 5432
-  #     POSTGRES_DB: driverdb
-  #     POSTGRES_USER: driverService
-  #     POSTGRES_PASSWORD: driver
-  #   ports:
-  #     - "7070:7070"
-  #   depends_on:
-  #     - drivermaster-postgres
+  rabbitMQ:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+    - rabbitMQ-data:/var/lib/rabbitmq
+    - rabbitMQ-config:/etc/rabbitmq
 
-  # auth-service:
-  #   build: ./auth
-  #   container_name: auth-service
-  #   ports:
-  #     - "4400:4400"
-  #   depends_on:
-  #     - mysql-auth
 
-  # mysql-auth:
-  #   image: mysql:latest
-  #   container_name: mysql-auth
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: root
-  #     MYSQL_DATABASE: authentication
-  #   ports:
-  #     - "3306:3306"
-  #     - "33060:33060"
-  #   volumes:
-  #     - mysql-data:/var/lib/mysql
+  matchmaker:
+    build: ./matchmaker
+    ports:
+      - "6060:6060"
+    environment:
+      RABBITMQ_HOST: rabbitMQ
+      DRIVEMASTER_SERVICE: drivermaster
+      TRANSITEDGE_SERVICE: transitedge
+    depends_on:
+      - rabbitMQ
 
-  # transitedge:
-  #   build: ./transitedge
-  #   container_name: transitedge
-  #   ports:
-  #     - "9090:9090"
-  #   depends_on:
-  #     - transitedge-surreal
+
+  drivermaster-postgres:
+    image: postgres
+    container_name: drivermaster-postgres
+    environment:
+      POSTGRES_DB: driverdb
+      POSTGRES_USER: driverService
+      POSTGRES_PASSWORD: driver
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+
+  drivermaster:
+    build: ./drivermaster
+    container_name: drivermaster
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: driverdb
+      POSTGRES_USER: driverService
+      POSTGRES_PASSWORD: driver
+    ports:
+      - "7070:7070"
+    depends_on:
+      - drivermaster-postgres
+
+
+  tripguard:
+    build: ./tripguard
+    container_name: tripguard-service
+    ports:
+      - "4400:4400"
+    environment:
+      MYSQL_HOST: mysql-tripguard
+      RABBITMQ_HOST: rabbitMQ
+    depends_on:
+      - mysql-tripguard
+
+
+  mysql-tripguard:
+    image: mysql:latest
+    container_name: mysql-tripguard
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: authentication
+    ports:
+      - "3306:3306"
+      - "33060:33060"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+
+  transitedge:
+    build: ./transitedge
+    container_name: transitedge
+    ports:
+      - "9090:9090"
+    environment:
+      SURREALDB_HOST: transitedge-surreal
+    depends_on:
+      - transitedge-surreal
   
-  # transitedge-surreal:
-  #   image: surrealdb/surrealdb:latest
-  #   container_name: transitedge-surreal
-  #   command: start --log trace --user root --pass root
-  #   ports:
-  #     - "8000:8000"
-  #   volumes:
-  #     - surreal-data:/data
+  
+  transitedge-surreal:
+    image: surrealdb/surrealdb:latest
+    container_name: transitedge-surreal
+    command: start --log trace --user root --pass root
+    ports:
+      - "8000:8000"
+    volumes:
+      - surreal-data:/data
+
+
 volumes:
   mongodb-data:
   postgres-data:

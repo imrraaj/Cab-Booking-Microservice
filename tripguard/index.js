@@ -2,17 +2,26 @@ import express from "express";
 import mysql from "mysql2";
 import { hashPassword, matchPassword } from "./bcrypt.js";
 import jwt from 'jsonwebtoken';
+import amqp from 'amqplib';
+import { z } from "zod";
+
+
+const MYSQL_HOST = process.env.MYSQL_HOST || "localhost";
+const RABBITMQ_HOST = process.env.RABBITMQ_HOST || "localhost";
 
 const app = express();
+
+
+
 const pool = mysql.createPool({
-  host: "mysql-auth",
+  host: MYSQL_HOST,
   user: "root",
   password: "root",
   database: "authentication",
 });
 
 app.use(express.json());
-app.post("/create-user", async (req, res) => {
+app.post("/register", async (req, res) => {
   const user = req.body.name;
   const hashedPassword = hashPassword(req.body.password, 10);
 
@@ -78,6 +87,79 @@ async function authenticateUser(req, res) {
   }
 }
 
+// write a middleware to check the jwt token
+// if the token is valid, then call next()
+// else send 401
+const authenticate = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) {
+    res.sendStatus(401);
+    return;
+  }
+
+  jwt.verify(token, 'secrett', (err, decoded) => {
+    if (err) {
+      res.sendStatus(401);
+      return;
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
+
+const locationSchema = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
+});
+const riderRequestSchema = z.object({
+  riderId: z.string(),
+  riderName: z.string(),
+  destination: z.string(),
+  currentLocation: locationSchema,
+  destinationLocation: locationSchema,
+  driverId: z.string(),
+  driverName: z.string(),
+  carType: z.string(),
+  price: z.number().optional()
+});
+app.post('/ride', authenticate, async (req, res) => {
+
+  const body = riderRequestSchema.safeParse(req.body);
+  if (!body.success) return res.status(400).json({ status: false, message: body.error.toString() });
+  const queueName = "mysimplequque";
+  const message = {
+    riderId: body.data.riderId,
+    riderName: body.data.riderName,
+    currentLocation: {
+      latitude: body.data.currentLocation.latitude,
+      longitude: body.data.currentLocation.latitude,
+    },
+    destination: body.data.destination,
+    destinationLocation: {
+      latitude: body.data.destinationLocation.latitude,
+      longitude: body.data.destinationLocation.longitude,
+    },
+    carType: body.data.carType
+  };
+
+  try {
+    const connection = await amqp.connect(`amqp://${RABBITMQ_HOST}`);
+    const channel = await connection.createChannel();
+    await channel.assertQueue(queueName, { durable: true });
+    channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)), { contentType: "application/json" });
+    console.log(`Sent: ${message}`);
+    return res.json({ success: true, message: "ride request has been placed" });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ status: false })
+  }
+});
+
+
+
+
+
 app.post('/login', (req, res) => {
   authenticateUser(req, res);
 });
@@ -94,7 +176,6 @@ async function createTableIfNotExists() {
     const connection = await pool.promise().getConnection();
     const sql = "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), password VARCHAR(255))";
     await connection.execute(sql);
-    console.log('Table created');
     return connection;
   } catch (error) {
     console.error('Error creating table:', error);
@@ -117,4 +198,6 @@ async function startServer() {
     console.log(`Server started on http://localhost:${port}`);
   });
 }
+
+
 startServer();

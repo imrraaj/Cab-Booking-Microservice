@@ -4,6 +4,7 @@ import { riderRequestSchema, locationSchema } from "./schema";
 import { z } from "zod";
 
 const PORT = 9090;
+const SURREALDB_HOST = process.env.SURREALDB_HOST || 'localhost';
 const db = new Surreal();
 
 const app = express();
@@ -62,8 +63,8 @@ app.post("/create", async (req, res) => {
     // Add the calculated price to the validated data
     validatedData.data.price = Math.ceil(price);
     try {
-        await db.create('rides', { ...validatedData });
-        return res.json({ message: 'Data stored successfully' });
+        const rideObj = await db.create('rides', { ...validatedData });
+        return res.json({ message: 'Data stored successfully', data: rideObj });
     } catch (e) {
         console.error('Error storing data in SurrealDB:', e);
         return res.status(500).json({ error: "Internal Server Error" });
@@ -128,7 +129,7 @@ app.post('/set-payment/:rideId', async (req, res) => {
 app.listen(PORT, async () => {
     console.log(`Service listening on PORT ${PORT}`);
     try {
-        await db.connect('http://transitedge-surreal:8000/rpc');
+        await db.connect(`ws://${SURREALDB_HOST}:8000`);
         await db.signin({
             username: 'root',
             password: 'root',

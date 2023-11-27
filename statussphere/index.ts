@@ -5,7 +5,9 @@ import { MongoClient, Collection } from 'mongodb';
 const app = express();
 const port = 4900;
 
-const mongoURI = "mongodb://statussphere-mongodb" || 'mongodb://127.0.0.1:27018';
+const MONGODB_HOST = process.env.MONGODB_HOST || "127.0.0.1:27018";
+const DISCOVERY_SERVICE = process.env.DISCOVERY_SERVICE || "localhost";
+const mongoURI = `mongodb://${MONGODB_HOST}`
 const dbName = 'monitoringdb';
 const collectionName = 'service_statuses';
 
@@ -22,7 +24,7 @@ async function connectToMongoDB(): Promise<Collection<ServiceStatus>> {
 }
 async function healthcheck() {
     try {
-        const response = await fetch('http://discovery-service:8080/discover/all');
+        const response = await fetch(`http://${DISCOVERY_SERVICE}:8080/discover/all`);
         const services = await response.json();
         const serviceStatuses = [];
 

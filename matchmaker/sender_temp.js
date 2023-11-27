@@ -14,8 +14,8 @@ async function sendMessage() {
             riderId: "123",
             riderName: "Raj Patel",
             currentLocation: {
-                latitude: 72.25,
-                longitude: 96.45,
+                latitude: 0,
+                longitude: 0,
             },
             destination: "Ahmedabad",
             destinationLocation: {
