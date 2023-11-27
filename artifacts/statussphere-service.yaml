@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -f .\docker-compose.yml -o .\artifacts\
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: statussphere
+  name: statussphere
+spec:
+  ports:
+    - name: "4900"
+      port: 4900
+      targetPort: 4900
+  selector:
+    io.kompose.service: statussphere
+status:
+  loadBalancer: {}

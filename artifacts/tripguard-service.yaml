@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -f .\docker-compose.yml -o .\artifacts\
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: tripguard
+  name: tripguard
+spec:
+  ports:
+    - name: "4400"
+      port: 4400
+      targetPort: 4400
+  selector:
+    io.kompose.service: tripguard
+status:
+  loadBalancer: {}

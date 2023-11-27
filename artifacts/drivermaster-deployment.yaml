@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -f .\docker-compose.yml -o .\artifacts\
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: drivermaster
+  name: drivermaster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: drivermaster
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -f .\docker-compose.yml -o .\artifacts\
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: drivermaster
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: driverdb
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: driver
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: driverService
+          image: imrraaj/drivermaster:latest
+          name: drivermaster
+          ports:
+            - containerPort: 7070
+          resources: {}
+      restartPolicy: Always
+status: {}

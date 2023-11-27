@@ -1,7 +1,13 @@
-minikube image load statussphere
-minikube image load matchmaker  
-minikube image load tripguard   
-minikube image load statussphere
-minikube image load drivermaster
-minikube image load transitedge 
-minikube image load discovery   
+# docker-compose build
+
+kompose convert -f .\docker-compose.yml -o .\artifacts\
+
+# minikube image load statussphere:latest
+# minikube image load matchmaker:latest  
+# minikube image load tripguard:latest   
+# minikube image load statussphere:latest
+# minikube image load drivermaster:latest
+# minikube image load transitedge:latest 
+# minikube image load discovery:latest   
+
+kubectl apply -f .\artifacts\

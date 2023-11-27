@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -f .\docker-compose.yml -o .\artifacts\
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: statussphere
+  name: statussphere
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: statussphere
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Program Files\Kubectl\kompose.exe convert -f .\docker-compose.yml -o .\artifacts\
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: statussphere
+    spec:
+      containers:
+        - env:
+            - name: DISCOVERY_SERVICE
+              value: discovery-service
+            - name: MONGODB_HOST
+              value: statussphere-mongodb
+          image: imrraaj/statussphere:latest
+          name: statussphere
+          ports:
+            - containerPort: 4900
+          resources: {}
+      restartPolicy: Always
+status: {}
