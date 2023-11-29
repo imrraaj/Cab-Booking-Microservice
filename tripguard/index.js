@@ -118,16 +118,13 @@ const riderRequestSchema = z.object({
   destination: z.string(),
   currentLocation: locationSchema,
   destinationLocation: locationSchema,
-  driverId: z.string(),
-  driverName: z.string(),
-  carType: z.string(),
-  price: z.number().optional()
+  carType: z.string()
 });
 app.post('/ride', authenticate, async (req, res) => {
 
   const body = riderRequestSchema.safeParse(req.body);
   if (!body.success) return res.status(400).json({ status: false, message: body.error.toString() });
-  const queueName = "mysimplequque";
+  const queueName = process.env.QUEUE_NAME || "default";
   const message = {
     riderId: body.data.riderId,
     riderName: body.data.riderName,

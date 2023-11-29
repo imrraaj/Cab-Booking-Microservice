@@ -7,7 +7,7 @@ const PORT = 6060;
 
 const RABBITMQ_HOST = process.env.RABBITMQ_HOST || "localhost";
 const DRIVEMASTER_SERVICE = process.env.DRIVEMASTER_SERVICE || "localhost";
-const TRANSITEDGE_SERVICE = process.env.DRIVEMASTER_SERVICE || "localhost";
+const TRANSITEDGE_SERVICE = process.env.TRANSITEDGE_SERVICE || "localhost";
 
 
 

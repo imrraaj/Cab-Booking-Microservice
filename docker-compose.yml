@@ -68,6 +68,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       DRIVEMASTER_SERVICE: drivermaster
       TRANSITEDGE_SERVICE: transitedge
+      QUEUE_NAME: matchmakerQueue
     depends_on:
       - rabbitmq
 
@@ -110,6 +111,7 @@ services:
     environment:
       MYSQL_HOST: mysql-tripguard
       RABBITMQ_HOST: rabbitmq
+      QUEUE_NAME: matchmakerQueue
     depends_on:
       - mysql-tripguard
 
